@@ -149,6 +149,18 @@ def encrypt():
 
             os.remove(input_path)
 
+            # Print formatted success message to terminal
+            print("\n" + "=" * 60)
+            print("SUCCESS: FILE ENCRYPTION COMPLETED!")
+            print("=" * 60)
+            print(f"Original file: {filename}")
+            print(f"Encrypted file: encrypted_{filename}.bin")
+            print(f"Key ID: {key_id}")
+            print("=" * 60)
+            print("IMPORTANT: Save this Key ID to decrypt your file later!")
+            print("Store it securely - you cannot decrypt without it!")
+            print("=" * 60 + "\n")
+
             # Store download data in session for the download route
             from flask import session
             session['download_file'] = encrypted_path
