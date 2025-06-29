@@ -70,6 +70,11 @@ def about():
     back_url = request.referrer or url_for('index')
     return render_template('about.html', back_url=back_url)
 
+@app.route('/cli_guide')
+def cli_guide():
+    back_url = request.referrer or url_for('index')
+    return render_template('cli_guide.html', back_url=back_url)
+
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
     if 'file' not in request.files or 'key_id' not in request.form:

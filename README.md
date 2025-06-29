@@ -1,14 +1,17 @@
-# Triple DES File Encryption Web Application
+# Triple DES Encryption CLI Tool
 
-A secure web application for encrypting and decrypting files using Triple DES encryption algorithm.
+A professional command-line interface for secure file and text encryption using Triple DES algorithm.
 
 ## Features
 
-- **Secure File Encryption**: Uses Triple DES in CBC mode with proper padding
-- **Web Interface**: Clean, responsive Bootstrap-based UI
-- **Key Management**: Secure key generation and storage with unique key IDs
-- **Operation History**: SQLite database tracking all encryption/decryption operations
-- **File Handling**: Secure file upload/download with automatic cleanup
+- **🔒 Secure File Encryption**: Uses Triple DES in CBC mode with proper PKCS7 padding
+- **📝 Text Encryption**: Encrypt and decrypt text with base64 encoding
+- **🎨 Professional CLI Interface**: Colorized output with formatted success messages
+- **🔑 Advanced Key Management**: Secure key generation and storage with unique key IDs
+- **📊 Operation History**: SQLite database tracking all encryption/decryption operations
+- **⚡ Interactive & Command-Line Modes**: Both menu-driven and direct command support
+- **🛡️ Military-Grade Security**: 24-byte Triple DES keys with random initialization vectors
+- **💾 Automatic File Handling**: Smart output naming and secure file operations
 
 ## Fixed Issues
 
@@ -34,31 +37,50 @@ This project has been updated to fix several critical issues:
 
 ## Usage
 
-### Running the Web Application
+### Quick Start
 
 ```bash
-python src/app.py
+# Interactive mode (recommended for beginners)
+python encrypt.py
+
+# Or use the main CLI directly
+python cli_main.py
 ```
 
-The application will start on `http://127.0.0.1:5000`
-
-### Using the Command Line Tool
-
-You can also use the Triple DES cipher directly from command line:
+### Command Line Usage
 
 ```bash
 # Encrypt a file
-python src/triple_des_example.py --action encrypt --input myfile.txt --output encrypted.bin
+python cli_main.py --encrypt --file document.pdf
 
 # Decrypt a file
-python src/triple_des_example.py --action decrypt --input encrypted.bin --output decrypted.txt --key-name your_key_id
+python cli_main.py --decrypt --file encrypted_document.pdf.bin --key a1b2c3d4e5f6g7h8
 
 # Encrypt text
-python src/triple_des_example.py --action encrypt --input "Hello World" --text
+python cli_main.py --encrypt --text "Hello World"
 
 # Decrypt text
-python src/triple_des_example.py --action decrypt --input "base64_encrypted_text" --text --key-name your_key_id
+python cli_main.py --decrypt --text "base64_encrypted_text" --key a1b2c3d4e5f6g7h8
+
+# Show operation history
+python cli_main.py --history
+
+# List stored keys
+python cli_main.py --list-keys
 ```
+
+### Interactive Mode Features
+
+The interactive mode provides a user-friendly menu system:
+
+1. **🔒 Encrypt File** - Secure file encryption with automatic key generation
+2. **🔓 Decrypt File** - File decryption using stored key IDs
+3. **📝 Encrypt Text** - Text encryption with optional file output
+4. **📖 Decrypt Text** - Text decryption from file or direct input
+5. **📊 View History** - Display recent encryption/decryption operations
+6. **🔑 List Keys** - Show all stored encryption key IDs
+7. **❓ Help** - Comprehensive help and usage information
+8. **🚪 Exit** - Clean application exit
 
 ## Testing
 
