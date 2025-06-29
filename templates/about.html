@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}About Triple DES - Cyberpunk Security Documentation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cyberpunk Navigation -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-dark pulse">
+            <i class="fas fa-chevron-left me-2"></i>RETURN TO HUB
+        </a>
+        <div class="ms-auto">
+            <span class="badge bg-info">
+                <i class="fas fa-info-circle me-1"></i>SYSTEM DOCUMENTATION
+            </span>
+        </div>
+    </div>
+
+    <div class="text-center mb-5">
+        <h1 class="glitch" data-text="◢ SYSTEM DOCUMENTATION ◣">
+            ◢ SYSTEM DOCUMENTATION ◣
+        </h1>
+        <p class="lead text-glow">
+            <i class="fas fa-database me-2"></i>
+            TRIPLE DES SECURITY PROTOCOL SPECIFICATIONS
+            <i class="fas fa-database ms-2"></i>
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Main Documentation Card -->
+            <div class="card border-glow mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-virus me-2"></i>TRIPLE DES ENCRYPTION PROTOCOL
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-microchip me-2"></i>
+                        <strong>CLASSIFICATION:</strong> Military-Grade Encryption Standard
+                    </div>
+
+                    <h6 class="text-glow mb-3">
+                        <i class="fas fa-cog me-2"></i>TECHNICAL SPECIFICATIONS
+                    </h6>
+                    <p class="card-text">
+                        Triple DES (3DES) is a quantum-resistant symmetric encryption protocol that applies the DES cipher algorithm three times to each data block. This cyberpunk security system provides military-grade protection for classified data transmission.
+                    </p>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="text-glow">
+                                <i class="fas fa-microchip me-2"></i>ALGORITHM SPECS
+                            </h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>192-bit key length</li>
+                                <li><i class="fas fa-check text-success me-2"></i>CBC encryption mode</li>
+                                <li><i class="fas fa-check text-success me-2"></i>PKCS7 padding</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Random IV generation</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-glow">
+                                <i class="fas fa-shield-alt me-2"></i>SECURITY FEATURES
+                            </h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-lock text-primary me-2"></i>Quantum encryption</li>
+                                <li><i class="fas fa-key text-warning me-2"></i>Secure key management</li>
+                                <li><i class="fas fa-database text-info me-2"></i>Operation logging</li>
+                                <li><i class="fas fa-shield-virus text-danger me-2"></i>Anti-tamper protection</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Card -->
+            <div class="card border-glow mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-rocket me-2"></i>SYSTEM CAPABILITIES
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-shield fa-2x me-3" style="color: var(--primary-neon);"></i>
+                                <div>
+                                    <h6 class="mb-1 text-glow">FILE ENCRYPTION</h6>
+                                    <small class="text-muted">Secure any file type with quantum encryption</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-brain fa-2x me-3" style="color: var(--accent-neon);"></i>
+                                <div>
+                                    <h6 class="mb-1 text-glow">NEURAL INTERFACE</h6>
+                                    <small class="text-muted">Intuitive cyberpunk user experience</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chart-line fa-2x me-3" style="color: var(--secondary-neon);"></i>
+                                <div>
+                                    <h6 class="mb-1 text-glow">REAL-TIME MONITORING</h6>
+                                    <small class="text-muted">Live operation tracking and analytics</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-server fa-2x me-3" style="color: var(--warning-neon);"></i>
+                                <div>
+                                    <h6 class="mb-1 text-glow">SECURE STORAGE</h6>
+                                    <small class="text-muted">Encrypted key management system</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Instructions Card -->
+            <div class="card border-glow mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-terminal me-2"></i>OPERATION PROTOCOL
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-glow mb-3">
+                                <i class="fas fa-lock me-2"></i>ENCRYPTION SEQUENCE
+                            </h6>
+                            <ol class="list-unstyled">
+                                <li class="mb-2">
+                                    <span class="badge bg-primary me-2">01</span>
+                                    Navigate to Encryption Terminal
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-primary me-2">02</span>
+                                    Upload target file for encryption
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-primary me-2">03</span>
+                                    System generates quantum key
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-primary me-2">04</span>
+                                    Save provided Key ID securely
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-primary me-2">05</span>
+                                    Download encrypted .bin file
+                                </li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-glow mb-3">
+                                <i class="fas fa-unlock me-2"></i>DECRYPTION SEQUENCE
+                            </h6>
+                            <ol class="list-unstyled">
+                                <li class="mb-2">
+                                    <span class="badge bg-success me-2">01</span>
+                                    Access Decryption Protocol
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-success me-2">02</span>
+                                    Upload encrypted .bin file
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-success me-2">03</span>
+                                    Enter valid Key ID
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-success me-2">04</span>
+                                    System validates credentials
+                                </li>
+                                <li class="mb-2">
+                                    <span class="badge bg-success me-2">05</span>
+                                    Download decrypted file
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice Card -->
+            <div class="card border-glow">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>SECURITY PROTOCOLS
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>CLASSIFIED NOTICE:</strong> This system employs military-grade encryption. Key IDs are the only method to decrypt files. Loss of Key ID results in permanent data inaccessibility.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-danger">
+                                <i class="fas fa-ban me-2"></i>SECURITY WARNINGS
+                            </h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-times text-danger me-2"></i>Never share Key IDs</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Store keys securely offline</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Avoid public networks</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-check-circle me-2"></i>BEST PRACTICES
+                            </h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-check text-success me-2"></i>Use secure connections</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Backup Key IDs safely</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Monitor operation logs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

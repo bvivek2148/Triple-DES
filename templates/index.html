@@ -1,0 +1,175 @@
+
+{% extends "base.html" %}
+
+{% block title %}Triple DES Encryption - Professional Security Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Professional Welcome Section -->
+    <div class="jumbotron text-center mb-5">
+        <h1 class="display-4 mb-4">
+            Triple DES Security
+        </h1>
+        <p class="lead mb-4">
+            <i class="fas fa-shield-alt me-2"></i>
+            Enterprise-grade file encryption with military-level security
+        </p>
+        <hr class="my-4">
+        <p class="mb-4">
+            Secure your sensitive files with our professional Triple DES encryption system.
+            Fast, reliable, and trusted by organizations worldwide.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a class="btn btn-primary btn-lg" href="{{ url_for('encryption_tool') }}" role="button">
+                <i class="fas fa-lock me-2"></i>Start Encryption
+            </a>
+            <a class="btn btn-outline-dark btn-lg" href="{{ url_for('about') }}" role="button">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Professional Features Section -->
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-shield-alt fa-4x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">
+                        <i class="fas fa-lock me-2"></i>Secure Encryption
+                    </h5>
+                    <p class="card-text">
+                        Advanced Triple DES algorithm with CBC mode ensures maximum security for your sensitive data files.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-primary">Enterprise-Grade</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-user-friendly fa-4x text-success"></i>
+                    </div>
+                    <h5 class="card-title">
+                        <i class="fas fa-mouse-pointer me-2"></i>Easy to Use
+                    </h5>
+                    <p class="card-text">
+                        Intuitive interface designed for professionals. Encrypt and decrypt files with just a few clicks.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-success">User-Friendly</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-chart-line fa-4x text-info"></i>
+                    </div>
+                    <h5 class="card-title">
+                        <i class="fas fa-history me-2"></i>Operation Tracking
+                    </h5>
+                    <p class="card-text">
+                        Comprehensive logging and monitoring of all encryption operations with detailed audit trails.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-info">Full Audit</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Operations Log -->
+    <div class="card mt-5">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history me-2"></i>Recent Operations
+                <span class="float-end">
+                    <span class="status-indicator online">
+                        <i class="fas fa-circle"></i>
+                        Live
+                    </span>
+                </span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if history %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-file-code me-2"></i>FILENAME</th>
+                                <th><i class="fas fa-cogs me-2"></i>OPERATION</th>
+                                <th><i class="fas fa-key me-2"></i>KEY ID</th>
+                                <th><i class="fas fa-clock me-2"></i>TIMESTAMP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in history %}
+                            <tr class="interactive-hover">
+                                <td>
+                                    <i class="fas fa-file-alt me-2" style="color: var(--primary-neon);"></i>
+                                    <span class="text-glow">{{ entry.filename }}</span>
+                                </td>
+                                <td>
+                                    {% if entry.operation_type == 'Encryption' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-lock me-1"></i>{{ entry.operation_type }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-unlock me-1"></i>{{ entry.operation_type }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code class="text-glow">{{ entry.key_id }}</code>
+                                </td>
+                                <td>
+                                    <i class="fas fa-calendar-alt me-2" style="color: var(--secondary-neon);"></i>
+                                    {{ entry.timestamp }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-dark">
+                        <i class="fas fa-history me-2"></i>VIEW FULL LOG
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-database fa-3x mb-3" style="color: var(--text-secondary); opacity: 0.5;"></i>
+                    <h6 class="text-secondary">NO OPERATIONS LOGGED</h6>
+                    <p class="text-muted">Start encrypting files to see activity here</p>
+                    <a href="{{ url_for('encryption_tool') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>START FIRST OPERATION
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

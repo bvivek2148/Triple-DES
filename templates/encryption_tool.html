@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Encryption Tool - Triple DES Cyberpunk Security{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Professional Navigation -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-dark">
+            <i class="fas fa-chevron-left me-2"></i>Return to Home
+        </a>
+        <div class="ms-auto">
+            <span class="status-indicator online">
+                <i class="fas fa-shield-check"></i>
+                Secure Connection
+            </span>
+        </div>
+    </div>
+
+
+
+    <!-- Dynamic Success Message -->
+    <div id="successMessage" style="display: none;"></div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="text-center mb-5">
+        <h1>Encryption Tool</h1>
+        <p class="lead">
+            <i class="fas fa-shield-alt me-2"></i>
+            Secure file encryption and decryption interface
+        </p>
+    </div>
+
+<!-- Professional Encryption/Decryption Interface -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lock me-2"></i>File Encryption
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Encryption:</strong> Triple DES-CBC with 192-bit key
+                    </div>
+                </div>
+                <form id="encryptForm" action="{{ url_for('encrypt') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="encryptFile" class="form-label">
+                            <i class="fas fa-file-upload me-2"></i>Select File to Encrypt
+                        </label>
+                        <input type="file" class="form-control" id="encryptFile" name="file" required>
+                        <div class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            File will be encrypted with enterprise-grade security
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="encryptBtn">
+                        <i class="fas fa-lock me-2"></i>Encrypt File
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-unlock me-2"></i>File Decryption
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Security Notice:</strong> Valid Key ID required for decryption
+                    </div>
+                </div>
+                <form action="{{ url_for('decrypt') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="decryptFile" class="form-label">
+                            <i class="fas fa-file-code me-2"></i>Select Encrypted File
+                        </label>
+                        <input type="file" class="form-control" id="decryptFile" name="file" required accept=".bin">
+                        <div class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Only .bin encrypted files accepted
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="keyId" class="form-label">
+                            <i class="fas fa-key me-2"></i>Key ID
+                        </label>
+                        <input type="text" class="form-control" id="keyId" name="key_id" required
+                               placeholder="Enter 16-character key identifier"
+                               pattern="[a-fA-F0-9]{16}"
+                               title="Key ID must be 16 hexadecimal characters">
+                        <div class="form-text text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Key ID provided during encryption process
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-unlock-alt me-2"></i>Decrypt File
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Operations History -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-history me-2"></i>Recent Operations
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if history %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Operation</th>
+                            <th>Key ID</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in history %}
+                        <tr>
+                            <td>{{ entry.filename }}</td>
+                            <td>
+                                {% if entry.operation_type == 'Encryption' %}
+                                    <span class="badge bg-primary">{{ entry.operation_type }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ entry.operation_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ entry.key_id }}</code>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ entry.key_id }}')" title="Copy Key ID">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
+                            <td>{{ entry.timestamp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No operations yet. Start by encrypting a file!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Handle form submission with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const encryptForm = document.getElementById('encryptForm');
+    const encryptBtn = document.getElementById('encryptBtn');
+    const successMessage = document.getElementById('successMessage');
+
+    encryptForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent normal form submission
+
+        // Show loading state
+        const originalText = encryptBtn.innerHTML;
+        encryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Encrypting...';
+        encryptBtn.disabled = true;
+
+        // Create FormData object
+        const formData = new FormData(encryptForm);
+
+        // Send AJAX request
+        fetch(encryptForm.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message with Key ID
+                successMessage.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        File encrypted successfully! Key ID: <strong>${data.key_id}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                successMessage.style.display = 'block';
+
+                // Trigger automatic download
+                const link = document.createElement('a');
+                link.href = data.download_url;
+                link.download = data.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Reset form
+                encryptForm.reset();
+            } else {
+                // Show error message
+                successMessage.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                successMessage.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            successMessage.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    An error occurred during encryption.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            successMessage.style.display = 'block';
+        })
+        .finally(() => {
+            // Restore button state
+            encryptBtn.innerHTML = originalText;
+            encryptBtn.disabled = false;
+        });
+    });
+});
+</script>
+
+{% endblock %}
