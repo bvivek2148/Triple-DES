@@ -372,12 +372,19 @@ class TripleDESCLI:
 
             # Generate output filename if not provided
             if output_file is None:
-                output_file = f"decrypted_{input_path.stem}"
                 if input_path.suffix == '.bin':
-                    # Try to extract original extension
+                    # Try to extract original filename from encrypted file
                     base_name = input_path.stem
                     if base_name.startswith('encrypted_'):
-                        output_file = base_name[10:]  # Remove 'encrypted_' prefix
+                        # Remove 'encrypted_' prefix and get original name
+                        original_name = base_name[10:]  # Remove 'encrypted_' prefix
+                        output_file = f"decrypted_{original_name}"
+                    else:
+                        # Fallback if naming pattern doesn't match
+                        output_file = f"decrypted_{base_name}"
+                else:
+                    # For non-.bin files, just add decrypted_ prefix
+                    output_file = f"decrypted_{input_path.name}"
 
             output_path = Path(output_file)
 
@@ -414,109 +421,7 @@ class TripleDESCLI:
             self.print_error(f"Decryption failed: {e}")
             return False
 
-    def encrypt_text_cli(self, text, output_file=None):
-        """Encrypt text via CLI"""
-        try:
-            # Generate new key and encrypt
-            self.cipher.generate_key()
-            key_id = os.urandom(8).hex()
-            self.cipher.save_key(key_id)
 
-            # Perform encryption
-            encrypted_data = self.cipher.encrypt_data(text)
-
-            if output_file:
-                # Save to file
-                with open(output_file, 'wb') as f:
-                    f.write(encrypted_data)
-
-                # Show progress animation
-                self.animate_loading("Encrypting text to file", 1.0)
-
-                success_content = [
-                    f"📝 Original text: {text[:50]}{'...' if len(text) > 50 else ''}",
-                    f"💾 Output file: {output_file}",
-                    f"🔑 Key ID: {key_id}",
-                    "",
-                    "⚠️  IMPORTANT: Save this Key ID to decrypt your text later!",
-                    "",
-                    f"📊 Text length: {len(text)} characters"
-                ]
-
-                self.print_enhanced_box("TEXT ENCRYPTION COMPLETED", success_content, "success")
-            else:
-                # Show progress animation
-                self.animate_loading("Encrypting text", 0.8)
-
-                # Display encrypted text
-                success_content = [
-                    f"📝 Original text: {text[:50]}{'...' if len(text) > 50 else ''}",
-                    f"🔒 Encrypted (base64): {encrypted_data.decode()[:60]}{'...' if len(encrypted_data.decode()) > 60 else ''}",
-                    f"🔑 Key ID: {key_id}",
-                    "",
-                    "⚠️  IMPORTANT: Save this Key ID to decrypt your text later!",
-                    "",
-                    f"📊 Text length: {len(text)} characters",
-                    f"📊 Encrypted length: {len(encrypted_data.decode())} characters"
-                ]
-
-                self.print_enhanced_box("TEXT ENCRYPTION COMPLETED", success_content, "success")
-
-            self.print_highlight(f"🔐 Encryption Key: {key_id}")
-
-            # Add to history
-            self.add_to_history("text_data", key_id, 'Text Encryption')
-
-            return True
-
-        except Exception as e:
-            self.print_error(f"Text encryption failed: {e}")
-            return False
-
-    def decrypt_text_cli(self, encrypted_text, key_id, is_file=False):
-        """Decrypt text via CLI"""
-        try:
-            # Load key
-            if not self.cipher.load_key(key_id):
-                self.print_error(f"Key ID not found: {key_id}")
-                return False
-
-            if is_file:
-                # Read from file
-                with open(encrypted_text, 'rb') as f:
-                    encrypted_data = f.read()
-            else:
-                # Use text directly
-                encrypted_data = encrypted_text.encode() if isinstance(encrypted_text, str) else encrypted_text
-
-            # Perform decryption
-            decrypted_data = self.cipher.decrypt_data(encrypted_data)
-            decrypted_text = decrypted_data.decode()
-
-            # Show progress animation
-            self.animate_loading("Decrypting text", 0.8)
-
-            # Display enhanced success message
-            success_content = [
-                f"🔒 Encrypted source: {'📁 File' if is_file else '📝 Text'}",
-                f"📖 Decrypted text: {decrypted_text[:100]}{'...' if len(decrypted_text) > 100 else ''}",
-                f"🔑 Key ID used: {key_id}",
-                "",
-                "✅ Text successfully decrypted!",
-                "",
-                f"📊 Decrypted length: {len(decrypted_text)} characters"
-            ]
-
-            self.print_enhanced_box("TEXT DECRYPTION COMPLETED", success_content, "success")
-
-            # Add to history
-            self.add_to_history("text_data", key_id, 'Text Decryption')
-
-            return True
-
-        except Exception as e:
-            self.print_error(f"Text decryption failed: {e}")
-            return False
 
     def show_history_cli(self, limit=10):
         """Display enhanced operation history"""
@@ -660,12 +565,10 @@ class TripleDESCLI:
         menu_items = [
             ("1", "🔒", "Encrypt File", "Secure file encryption with auto-generated keys"),
             ("2", "🔓", "Decrypt File", "Decrypt files using stored key IDs"),
-            ("3", "📝", "Encrypt Text", "Encrypt text with optional file output"),
-            ("4", "📖", "Decrypt Text", "Decrypt text from files or direct input"),
-            ("5", "📊", "View History", "Display recent encryption operations"),
-            ("6", "🔑", "List Keys", "Show all stored encryption key IDs"),
-            ("7", "❓", "Help", "Comprehensive help and usage information"),
-            ("8", "🚪", "Exit", "Exit the application safely")
+            ("3", "📊", "View History", "Display recent encryption operations"),
+            ("4", "🔑", "List Keys", "Show all stored encryption key IDs"),
+            ("5", "❓", "Help", "Comprehensive help and usage information"),
+            ("6", "🚪", "Exit", "Exit the application safely")
         ]
 
         # Create a beautiful menu with descriptions
@@ -688,30 +591,26 @@ class TripleDESCLI:
             self.show_menu()
 
             try:
-                choice = input(f"\n{CLIColors.ACCENT}🎯 Enter your choice (1-8): {CLIColors.RESET}").strip()
+                choice = input(f"\n{CLIColors.ACCENT}🎯 Enter your choice (1-6): {CLIColors.RESET}").strip()
 
                 if choice == '1':
                     self.handle_encrypt_file()
                 elif choice == '2':
                     self.handle_decrypt_file()
                 elif choice == '3':
-                    self.handle_encrypt_text()
-                elif choice == '4':
-                    self.handle_decrypt_text()
-                elif choice == '5':
                     self.handle_show_history()
-                elif choice == '6':
+                elif choice == '4':
                     self.list_keys_cli()
-                elif choice == '7':
+                elif choice == '5':
                     self.show_help()
-                elif choice == '8':
+                elif choice == '6':
                     self.show_goodbye()
                     break
                 else:
                     self.print_enhanced_box("INVALID CHOICE",
                                           [f"❌ '{choice}' is not a valid option.",
                                            "",
-                                           "💡 Please enter a number between 1-8.",
+                                           "💡 Please enter a number between 1-6.",
                                            "🔄 Try again with a valid menu option."],
                                           "error")
 
@@ -818,49 +717,7 @@ class TripleDESCLI:
 
         self.decrypt_file_cli(input_file, key_id, output_file)
 
-    def handle_encrypt_text(self):
-        """Handle text encryption in interactive mode"""
-        print(f"\n{CLIColors.HEADER}📝 TEXT ENCRYPTION{CLIColors.RESET}")
 
-        text = input(f"{CLIColors.INFO}Enter text to encrypt: {CLIColors.RESET}").strip()
-        if not text:
-            self.print_error("Text cannot be empty.")
-            return
-
-        save_to_file = input(f"{CLIColors.INFO}Save to file? (y/N): {CLIColors.RESET}").strip().lower()
-
-        output_file = None
-        if save_to_file in ['y', 'yes']:
-            output_file = input(f"{CLIColors.INFO}Enter output file path: {CLIColors.RESET}").strip()
-            if not output_file:
-                self.print_error("Output file path cannot be empty.")
-                return
-
-        self.encrypt_text_cli(text, output_file)
-
-    def handle_decrypt_text(self):
-        """Handle text decryption in interactive mode"""
-        print(f"\n{CLIColors.HEADER}📖 TEXT DECRYPTION{CLIColors.RESET}")
-
-        source_type = input(f"{CLIColors.INFO}Decrypt from (f)ile or (t)ext? (f/t): {CLIColors.RESET}").strip().lower()
-
-        if source_type in ['f', 'file']:
-            encrypted_source = input(f"{CLIColors.INFO}Enter encrypted file path: {CLIColors.RESET}").strip()
-            is_file = True
-        else:
-            encrypted_source = input(f"{CLIColors.INFO}Enter encrypted text (base64): {CLIColors.RESET}").strip()
-            is_file = False
-
-        if not encrypted_source:
-            self.print_error("Encrypted source cannot be empty.")
-            return
-
-        key_id = input(f"{CLIColors.INFO}Enter Key ID: {CLIColors.RESET}").strip()
-        if not key_id:
-            self.print_error("Key ID cannot be empty.")
-            return
-
-        self.decrypt_text_cli(encrypted_source, key_id, is_file)
 
     def handle_show_history(self):
         """Handle showing history in interactive mode"""
@@ -884,15 +741,14 @@ class TripleDESCLI:
 {CLIColors.HEADER}❓ TRIPLE DES CLI HELP{CLIColors.RESET}
 
 {CLIColors.INFO}OVERVIEW:{CLIColors.RESET}
-This CLI tool provides secure file and text encryption using the Triple DES algorithm
+This CLI tool provides secure file encryption using the Triple DES algorithm
 with CBC mode and proper PKCS7 padding for maximum security.
 
 {CLIColors.INFO}FEATURES:{CLIColors.RESET}
 • 🔒 File Encryption/Decryption with automatic key generation
-• 📝 Text Encryption/Decryption with base64 encoding
 • 🔑 Secure key management with unique Key IDs
 • 📊 Operation history tracking
-• 🎨 Colorized output for better user experience
+• 🎨 Enhanced CLI interface with animations
 • 💾 Automatic file handling and cleanup
 
 {CLIColors.INFO}SECURITY NOTES:{CLIColors.RESET}
@@ -911,16 +767,16 @@ with CBC mode and proper PKCS7 padding for maximum security.
 You can also use this tool with command line arguments:
 
 {CLIColors.SUCCESS}Encrypt a file:{CLIColors.RESET}
-  python cli_main.py --encrypt --file document.pdf
+  python encrypt.py --encrypt --file document.pdf
 
 {CLIColors.SUCCESS}Decrypt a file:{CLIColors.RESET}
-  python cli_main.py --decrypt --file encrypted_document.pdf.bin --key a1b2c3d4e5f6g7h8
+  python encrypt.py --decrypt --file encrypted_document.pdf.bin --key a1b2c3d4e5f6g7h8
 
-{CLIColors.SUCCESS}Encrypt text:{CLIColors.RESET}
-  python cli_main.py --encrypt --text "Hello World"
+{CLIColors.SUCCESS}View history:{CLIColors.RESET}
+  python encrypt.py --history
 
-{CLIColors.SUCCESS}Decrypt text:{CLIColors.RESET}
-  python cli_main.py --decrypt --text "base64_encrypted_text" --key a1b2c3d4e5f6g7h8
+{CLIColors.SUCCESS}List keys:{CLIColors.RESET}
+  python encrypt.py --list-keys
 
 {CLIColors.WARNING}IMPORTANT REMINDERS:{CLIColors.RESET}
 • Always backup your Key IDs in a secure location
@@ -936,7 +792,7 @@ You can also use this tool with command line arguments:
 def create_argument_parser():
     """Create command line argument parser"""
     parser = argparse.ArgumentParser(
-        description='Triple DES Encryption CLI Tool - Professional Security Interface',
+        description='Triple DES Encryption CLI Tool - Professional File Security Interface',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -949,12 +805,6 @@ Examples:
   Decrypt a file:
     python cli_main.py --decrypt --file encrypted_document.pdf.bin --key a1b2c3d4e5f6g7h8
 
-  Encrypt text:
-    python cli_main.py --encrypt --text "Hello World"
-
-  Decrypt text:
-    python cli_main.py --decrypt --text "base64_encrypted_text" --key a1b2c3d4e5f6g7h8
-
   Show history:
     python cli_main.py --history
 
@@ -965,15 +815,13 @@ Examples:
 
     # Main action group
     action_group = parser.add_mutually_exclusive_group()
-    action_group.add_argument('--encrypt', action='store_true', help='Encrypt data')
-    action_group.add_argument('--decrypt', action='store_true', help='Decrypt data')
+    action_group.add_argument('--encrypt', action='store_true', help='Encrypt file')
+    action_group.add_argument('--decrypt', action='store_true', help='Decrypt file')
     action_group.add_argument('--history', action='store_true', help='Show operation history')
     action_group.add_argument('--list-keys', action='store_true', help='List stored keys')
 
-    # Input type group
-    input_group = parser.add_mutually_exclusive_group()
-    input_group.add_argument('--file', type=str, help='File path to encrypt/decrypt')
-    input_group.add_argument('--text', type=str, help='Text to encrypt/decrypt')
+    # File input
+    parser.add_argument('--file', type=str, help='File path to encrypt/decrypt')
 
     # Additional options
     parser.add_argument('--output', type=str, help='Output file path (optional)')
@@ -996,11 +844,8 @@ def main():
         if args.file:
             success = cli.encrypt_file_cli(args.file, args.output)
             sys.exit(0 if success else 1)
-        elif args.text:
-            success = cli.encrypt_text_cli(args.text, args.output)
-            sys.exit(0 if success else 1)
         else:
-            cli.print_error("Please specify --file or --text for encryption")
+            cli.print_error("Please specify --file for encryption")
             sys.exit(1)
 
     elif args.decrypt:
@@ -1011,11 +856,8 @@ def main():
         if args.file:
             success = cli.decrypt_file_cli(args.file, args.key, args.output)
             sys.exit(0 if success else 1)
-        elif args.text:
-            success = cli.decrypt_text_cli(args.text, args.key, False)
-            sys.exit(0 if success else 1)
         else:
-            cli.print_error("Please specify --file or --text for decryption")
+            cli.print_error("Please specify --file for decryption")
             sys.exit(1)
 
     elif args.history:

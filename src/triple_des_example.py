@@ -257,14 +257,16 @@ Note: The Key ID is automatically generated during encryption and displayed in t
                     if args.output:
                         output_file = args.output
                     else:
-                        # Auto-generate output filename based on input
+                        # Auto-generate output filename based on input with decrypted_ prefix
                         input_name = os.path.basename(args.input)
                         if input_name.startswith('encrypted_') and input_name.endswith('.bin'):
-                            # Web app format: encrypted_filename.ext.bin -> filename.ext
-                            output_file = input_name[10:-4]  # Remove 'encrypted_' and '.bin'
+                            # Web app format: encrypted_filename.ext.bin -> decrypted_filename.ext
+                            original_name = input_name[10:-4]  # Remove 'encrypted_' and '.bin'
+                            output_file = f"decrypted_{original_name}"
                         else:
-                            # CLI format: filename.encrypted or filename.bin -> filename
-                            output_file = input_name.replace('.encrypted', '').replace('.bin', '')
+                            # CLI format: filename.encrypted or filename.bin -> decrypted_filename
+                            clean_name = input_name.replace('.encrypted', '').replace('.bin', '')
+                            output_file = f"decrypted_{clean_name}"
 
                         # Use the directory of the input file for output
                         output_file = os.path.join(os.path.dirname(args.input), output_file)
