@@ -106,11 +106,13 @@ class TripleDESCLI:
         self.db_path = self.project_root / 'database' / 'encryption_history.db'
         self.uploads_dir = self.project_root / 'uploads'
         self.keys_dir = self.project_root / 'secure_keys'
-        
+        self.encrypted_files_dir = self.project_root / 'encrypted_decrypted_files'
+
         # Ensure directories exist
         self.uploads_dir.mkdir(exist_ok=True)
         self.keys_dir.mkdir(exist_ok=True)
-        
+        self.encrypted_files_dir.mkdir(exist_ok=True)
+
         # Initialize database
         self._init_database()
     
@@ -321,8 +323,10 @@ class TripleDESCLI:
             # Generate output filename if not provided
             if output_file is None:
                 output_file = f"encrypted_{input_path.name}.bin"
-
-            output_path = Path(output_file)
+                output_path = self.encrypted_files_dir / output_file
+            else:
+                # If user provided output file, still put it in encrypted_files directory
+                output_path = self.encrypted_files_dir / Path(output_file).name
 
             # Generate new key and encrypt
             self.cipher.generate_key()
@@ -342,6 +346,7 @@ class TripleDESCLI:
             success_content = [
                 f"📁 Original file: {input_path.name}",
                 f"🔒 Encrypted file: {output_path.name}",
+                f"📂 Saved in: {output_path.parent}",
                 f"🔑 Key ID: {key_id}",
                 "",
                 "⚠️  IMPORTANT: Save this Key ID to decrypt your file later!",
@@ -366,9 +371,19 @@ class TripleDESCLI:
         """Decrypt a file via CLI"""
         try:
             input_path = Path(input_file)
+
+            # Check if file exists in current directory first, then in encrypted_files directory
             if not input_path.exists():
-                self.print_error(f"Input file not found: {input_file}")
-                return False
+                # Try looking in encrypted_decrypted_files directory
+                encrypted_path = self.encrypted_files_dir / input_path.name
+                if encrypted_path.exists():
+                    input_path = encrypted_path
+                    self.print_info(f"Found file in encrypted_decrypted_files directory: {encrypted_path}")
+                else:
+                    self.print_error(f"Input file not found: {input_file}")
+                    self.print_info(f"Searched in: {Path(input_file).absolute()}")
+                    self.print_info(f"Searched in: {encrypted_path}")
+                    return False
 
             # Generate output filename if not provided
             if output_file is None:
@@ -378,15 +393,22 @@ class TripleDESCLI:
                     if base_name.startswith('encrypted_'):
                         # Remove 'encrypted_' prefix and get original name
                         original_name = base_name[10:]  # Remove 'encrypted_' prefix
-                        output_file = f"decrypted_{original_name}"
+                        output_filename = f"decrypted_{original_name}"
                     else:
                         # Fallback if naming pattern doesn't match
-                        output_file = f"decrypted_{base_name}"
+                        output_filename = f"decrypted_{base_name}"
                 else:
                     # For non-.bin files, just add decrypted_ prefix
-                    output_file = f"decrypted_{input_path.name}"
+                    output_filename = f"decrypted_{input_path.name}"
+            else:
+                # User provided output file - ensure it has decrypted_ prefix
+                if not output_file.startswith('decrypted_'):
+                    output_filename = f"decrypted_{output_file}"
+                else:
+                    output_filename = output_file
 
-            output_path = Path(output_file)
+            # Always save decrypted files in encrypted_files directory
+            output_path = self.encrypted_files_dir / output_filename
 
             # Load key and decrypt
             if not self.cipher.load_key(key_id):
@@ -406,6 +428,7 @@ class TripleDESCLI:
             success_content = [
                 f"🔒 Encrypted file: {input_path.name}",
                 f"📁 Decrypted file: {output_path.name}",
+                f"📂 Saved in: {output_path.parent}",
                 f"🔑 Key ID used: {key_id}",
                 "",
                 "✅ File successfully decrypted!",
@@ -476,14 +499,24 @@ class TripleDESCLI:
 
         print()
         self.print_accent(f"💾 Database location: {self.db_path}")
+
+        # Add clear option
+        print(f"\n{CLIColors.WARNING}🗑️  Management Options:{CLIColors.RESET}")
+        clear_choice = input(f"{CLIColors.INFO}Clear all history? (y/N): {CLIColors.RESET}").strip().lower()
+        if clear_choice in ['y', 'yes']:
+            self._clear_history()
         print()
 
     def list_keys_cli(self):
-        """List all stored encryption keys"""
+        """List all stored encryption keys with associated filenames"""
         try:
             key_file = self.keys_dir / 'secure_keys.json'
             if not key_file.exists():
-                self.print_warning("No keys found.")
+                self.print_enhanced_box("NO KEYS FOUND",
+                                      ["🔑 No encryption keys have been generated yet.",
+                                       "",
+                                       "💡 Encrypt a file to generate your first key."],
+                                      "warning")
                 return
 
             with open(key_file, 'r') as f:
@@ -493,28 +526,152 @@ class TripleDESCLI:
             display_keys = {k: v for k, v in keys_data.items() if k != 'current_key'}
 
             if not display_keys:
-                self.print_warning("No stored keys found.")
+                self.print_enhanced_box("NO STORED KEYS",
+                                      ["🔑 No stored keys found in the system.",
+                                       "",
+                                       "💡 Generate keys by encrypting files."],
+                                      "warning")
                 return
 
-            self.print_header(f"\n🔑 STORED ENCRYPTION KEYS ({len(display_keys)} keys)")
+            # Get key usage from history
+            key_usage = self._get_key_usage_from_history()
+
+            self.print_header(f"\n🔑 STORED ENCRYPTION KEYS")
+            self.animate_loading("Loading key information", 0.8)
+
+            print(f"\n{CLIColors.ACCENT}📈 Found {len(display_keys)} encryption keys{CLIColors.RESET}")
             print()
 
             if TABULATE_AVAILABLE:
-                headers = ["Key ID", "Created"]
+                headers = [
+                    f"{CLIColors.HEADER}🔑 Key ID{CLIColors.RESET}",
+                    f"{CLIColors.HEADER}📁 Associated Files{CLIColors.RESET}",
+                    f"{CLIColors.HEADER}📊 Usage Count{CLIColors.RESET}"
+                ]
                 table_data = []
                 for key_id in display_keys.keys():
-                    # We don't have creation time, so show key ID only
-                    table_data.append([key_id, "N/A"])
+                    files = key_usage.get(key_id, {}).get('files', [])
+                    usage_count = key_usage.get(key_id, {}).get('count', 0)
 
-                print(tabulate(table_data, headers=headers, tablefmt="grid"))
+                    # Format files list
+                    if files:
+                        files_str = ', '.join(files[:2])  # Show first 2 files
+                        if len(files) > 2:
+                            files_str += f" (+{len(files)-2} more)"
+                    else:
+                        files_str = "No associated files"
+
+                    table_data.append([
+                        f"{CLIColors.WARNING}{key_id[:16]}...{CLIColors.RESET}",
+                        files_str[:40] + '...' if len(files_str) > 40 else files_str,
+                        f"{CLIColors.SUCCESS}{usage_count}{CLIColors.RESET}"
+                    ])
+
+                print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
             else:
                 for i, key_id in enumerate(display_keys.keys(), 1):
-                    print(f"{CLIColors.INFO}{i:2d}. {key_id}{CLIColors.RESET}")
+                    files = key_usage.get(key_id, {}).get('files', [])
+                    usage_count = key_usage.get(key_id, {}).get('count', 0)
+
+                    print(f"{CLIColors.ACCENT}{i:2d}.{CLIColors.RESET} {CLIColors.WARNING}{key_id}{CLIColors.RESET}")
+                    if files:
+                        print(f"    📁 Files: {', '.join(files[:3])}")
+                        if len(files) > 3:
+                            print(f"    📁 ... and {len(files)-3} more files")
+                    else:
+                        print(f"    📁 Files: No associated files")
+                    print(f"    📊 Usage: {usage_count} operations")
+                    print()
 
             print()
+            self.print_accent(f"💾 Keys stored in: {key_file}")
+
+            # Add clear option
+            print(f"\n{CLIColors.WARNING}🗑️  Management Options:{CLIColors.RESET}")
+            clear_choice = input(f"{CLIColors.INFO}Clear all keys? (y/N): {CLIColors.RESET}").strip().lower()
+            if clear_choice in ['y', 'yes']:
+                self._clear_all_keys()
 
         except Exception as e:
             self.print_error(f"Failed to list keys: {e}")
+
+    def _get_key_usage_from_history(self):
+        """Get key usage statistics from history database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute('SELECT key_id, filename FROM encryption_history')
+            records = c.fetchall()
+            conn.close()
+
+            key_usage = {}
+            for record in records:
+                key_id = record['key_id']
+                filename = record['filename']
+
+                if key_id not in key_usage:
+                    key_usage[key_id] = {'files': [], 'count': 0}
+
+                if filename not in key_usage[key_id]['files'] and filename != 'text_data':
+                    key_usage[key_id]['files'].append(filename)
+
+                key_usage[key_id]['count'] += 1
+
+            return key_usage
+
+        except Exception as e:
+            return {}
+
+    def _clear_all_keys(self):
+        """Clear all stored encryption keys"""
+        try:
+            confirm = input(f"{CLIColors.WARNING}⚠️  This will delete ALL encryption keys permanently! Type 'DELETE' to confirm: {CLIColors.RESET}")
+            if confirm == 'DELETE':
+                key_file = self.keys_dir / 'secure_keys.json'
+                if key_file.exists():
+                    # Keep only the structure, remove all keys
+                    with open(key_file, 'w') as f:
+                        json.dump({}, f, indent=2)
+
+                    self.animate_loading("Clearing all keys", 1.5)
+                    self.print_enhanced_box("KEYS CLEARED",
+                                          ["🗑️  All encryption keys have been permanently deleted.",
+                                           "",
+                                           "⚠️  Previously encrypted files cannot be decrypted anymore.",
+                                           "💡 New keys will be generated for future encryptions."],
+                                          "warning")
+                else:
+                    self.print_warning("No key file found to clear.")
+            else:
+                self.print_info("Key clearing cancelled.")
+
+        except Exception as e:
+            self.print_error(f"Failed to clear keys: {e}")
+
+    def _clear_history(self):
+        """Clear all operation history"""
+        try:
+            confirm = input(f"{CLIColors.WARNING}⚠️  This will delete ALL operation history permanently! Type 'DELETE' to confirm: {CLIColors.RESET}")
+            if confirm == 'DELETE':
+                conn = sqlite3.connect(self.db_path)
+                c = conn.cursor()
+                c.execute('DELETE FROM encryption_history')
+                conn.commit()
+                conn.close()
+
+                self.animate_loading("Clearing history", 1.5)
+                self.print_enhanced_box("HISTORY CLEARED",
+                                      ["🗑️  All operation history has been permanently deleted.",
+                                       "",
+                                       "📊 The history database is now empty.",
+                                       "💡 New operations will be tracked going forward."],
+                                      "warning")
+            else:
+                self.print_info("History clearing cancelled.")
+
+        except Exception as e:
+            self.print_error(f"Failed to clear history: {e}")
 
     def show_banner(self):
         """Display enhanced application banner with animation"""
@@ -565,8 +722,8 @@ class TripleDESCLI:
         menu_items = [
             ("1", "🔒", "Encrypt File", "Secure file encryption with auto-generated keys"),
             ("2", "🔓", "Decrypt File", "Decrypt files using stored key IDs"),
-            ("3", "📊", "View History", "Display recent encryption operations"),
-            ("4", "🔑", "List Keys", "Show all stored encryption key IDs"),
+            ("3", "📊", "View History", "Display recent operations with clear option"),
+            ("4", "🔑", "List Keys", "Show keys with filenames and clear option"),
             ("5", "❓", "Help", "Comprehensive help and usage information"),
             ("6", "🚪", "Exit", "Exit the application safely")
         ]
@@ -680,16 +837,19 @@ class TripleDESCLI:
         print(f"{CLIColors.INFO}📊 Size: {file_size:,} bytes ({file_size/1024:.1f} KB){CLIColors.RESET}")
 
         # Output file selection
-        output_file = input(f"\n{CLIColors.INFO}💾 Enter output file path (or press Enter for auto): {CLIColors.RESET}").strip()
+        output_file = input(f"\n{CLIColors.INFO}💾 Enter output filename (or press Enter for auto): {CLIColors.RESET}").strip()
         if not output_file:
             output_file = None
             auto_name = f"encrypted_{file_path.name}.bin"
             print(f"{CLIColors.ACCENT}🔄 Auto-generated name: {auto_name}{CLIColors.RESET}")
+            print(f"{CLIColors.INFO}📂 Will be saved in: {self.encrypted_files_dir}{CLIColors.RESET}")
+        else:
+            print(f"{CLIColors.INFO}📂 Will be saved in: {self.encrypted_files_dir / output_file}{CLIColors.RESET}")
 
         # Confirmation
         print(f"\n{CLIColors.WARNING}⚠️  Ready to encrypt:{CLIColors.RESET}")
         print(f"   📁 Input: {input_file}")
-        print(f"   🔒 Output: {output_file or auto_name}")
+        print(f"   🔒 Output: {self.encrypted_files_dir / (output_file or auto_name)}")
 
         confirm = input(f"\n{CLIColors.ACCENT}Proceed with encryption? (Y/n): {CLIColors.RESET}").strip().lower()
         if confirm in ['', 'y', 'yes']:
@@ -699,23 +859,78 @@ class TripleDESCLI:
 
     def handle_decrypt_file(self):
         """Handle file decryption in interactive mode"""
-        print(f"\n{CLIColors.HEADER}🔓 FILE DECRYPTION{CLIColors.RESET}")
+        self.print_separator('═')
+        print(f"\n{CLIColors.HEADER}🔓 FILE DECRYPTION WIZARD{CLIColors.RESET}")
+        print(f"{CLIColors.SUBTLE}Decrypt your encrypted files with the correct Key ID{CLIColors.RESET}\n")
 
-        input_file = input(f"{CLIColors.INFO}Enter encrypted file path: {CLIColors.RESET}").strip()
-        if not input_file:
-            self.print_error("File path cannot be empty.")
-            return
+        # Show available encrypted files
+        encrypted_files = list(self.encrypted_files_dir.glob("encrypted_*.bin"))
+        if encrypted_files:
+            print(f"{CLIColors.INFO}📂 Available encrypted files in {self.encrypted_files_dir.name}:{CLIColors.RESET}")
+            for i, file in enumerate(encrypted_files[:10], 1):  # Show first 10 files
+                print(f"   {i:2d}. {file.name}")
+            if len(encrypted_files) > 10:
+                print(f"   ... and {len(encrypted_files) - 10} more files")
+            print()
 
-        key_id = input(f"{CLIColors.INFO}Enter Key ID: {CLIColors.RESET}").strip()
+        # Enhanced file input with validation
+        while True:
+            input_file = input(f"{CLIColors.INFO}🔒 Enter encrypted filename (or full path): {CLIColors.RESET}").strip()
+            if not input_file:
+                self.print_error("File path cannot be empty.")
+                continue
+
+            # Check if it's just a filename (look in encrypted_decrypted_files directory)
+            if not Path(input_file).exists() and not Path(input_file).is_absolute():
+                potential_path = self.encrypted_files_dir / input_file
+                if potential_path.exists():
+                    input_file = str(potential_path)
+                    print(f"{CLIColors.SUCCESS}✅ Found file: {potential_path.name}{CLIColors.RESET}")
+                    break
+
+            # Check if the provided path exists
+            if Path(input_file).exists():
+                print(f"{CLIColors.SUCCESS}✅ File found: {Path(input_file).name}{CLIColors.RESET}")
+                break
+            else:
+                self.print_error(f"File not found: {input_file}")
+                retry = input(f"{CLIColors.WARNING}Try again? (y/N): {CLIColors.RESET}").strip().lower()
+                if retry not in ['y', 'yes']:
+                    return
+                continue
+
+        # Key ID input
+        key_id = input(f"\n{CLIColors.INFO}🔑 Enter Key ID: {CLIColors.RESET}").strip()
         if not key_id:
             self.print_error("Key ID cannot be empty.")
             return
 
-        output_file = input(f"{CLIColors.INFO}Enter output file path (or press Enter for auto): {CLIColors.RESET}").strip()
+        # Output file selection
+        output_file = input(f"\n{CLIColors.INFO}💾 Enter output filename (or press Enter for auto): {CLIColors.RESET}").strip()
         if not output_file:
             output_file = None
+            # Generate auto name preview
+            input_path = Path(input_file)
+            if input_path.suffix == '.bin' and input_path.stem.startswith('encrypted_'):
+                auto_name = f"decrypted_{input_path.stem[10:]}"
+            else:
+                auto_name = f"decrypted_{input_path.stem}"
+            print(f"{CLIColors.ACCENT}🔄 Auto-generated name: {auto_name}{CLIColors.RESET}")
+            print(f"{CLIColors.INFO}📂 Will be saved in: {self.encrypted_files_dir}{CLIColors.RESET}")
+        else:
+            print(f"{CLIColors.INFO}📂 Will be saved in: {self.encrypted_files_dir / output_file}{CLIColors.RESET}")
 
-        self.decrypt_file_cli(input_file, key_id, output_file)
+        # Confirmation
+        print(f"\n{CLIColors.WARNING}⚠️  Ready to decrypt:{CLIColors.RESET}")
+        print(f"   🔒 Input: {Path(input_file).name}")
+        print(f"   📁 Output: {self.encrypted_files_dir / (output_file or auto_name)}")
+        print(f"   🔑 Key ID: {key_id}")
+
+        confirm = input(f"\n{CLIColors.ACCENT}Proceed with decryption? (Y/n): {CLIColors.RESET}").strip().lower()
+        if confirm in ['', 'y', 'yes']:
+            self.decrypt_file_cli(input_file, key_id, output_file)
+        else:
+            self.print_warning("Decryption cancelled.")
 
 
 
@@ -750,6 +965,7 @@ with CBC mode and proper PKCS7 padding for maximum security.
 • 📊 Operation history tracking
 • 🎨 Enhanced CLI interface with animations
 • 💾 Automatic file handling and cleanup
+• 📂 Organized file storage in dedicated encrypted_decrypted_files directory
 
 {CLIColors.INFO}SECURITY NOTES:{CLIColors.RESET}
 • Each encryption operation generates a unique 24-byte Triple DES key
@@ -783,6 +999,7 @@ You can also use this tool with command line arguments:
 • Encrypted files cannot be recovered without the correct Key ID
 • Keep your 'secure_keys' folder safe and backed up
 • Test decryption immediately after encryption to verify Key ID
+• All encrypted and decrypted files are stored in 'encrypted_decrypted_files' directory
 
 {CLIColors.INFO}For more information, visit the project documentation.{CLIColors.RESET}
 """
