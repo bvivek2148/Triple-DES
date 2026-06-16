@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Operation History - Triple DES Security Logs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cyberpunk Navigation -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-dark pulse">
+            <i class="fas fa-chevron-left me-2"></i>RETURN TO HUB
+        </a>
+        <div class="ms-auto">
+            <span class="badge bg-info">
+                <i class="fas fa-database me-1"></i>SECURITY LOGS
+            </span>
+        </div>
+    </div>
+
+    <div class="text-center mb-5">
+        <h1 class="glitch" data-text="◢ OPERATION HISTORY ◣">
+            ◢ OPERATION HISTORY ◣
+        </h1>
+        <p class="lead text-glow">
+            <i class="fas fa-chart-line me-2"></i>
+            COMPREHENSIVE SECURITY OPERATION LOGS
+            <i class="fas fa-chart-line ms-2"></i>
+        </p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-glow text-center">
+                <div class="card-body">
+                    <i class="fas fa-database fa-2x mb-2" style="color: var(--primary-neon);"></i>
+                    <h5 class="text-glow">{{ history|length }}</h5>
+                    <small class="text-muted">TOTAL OPERATIONS</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-glow text-center">
+                <div class="card-body">
+                    <i class="fas fa-lock fa-2x mb-2" style="color: var(--accent-neon);"></i>
+                    <h5 class="text-glow">{{ history|selectattr("operation_type", "equalto", "Encryption")|list|length }}</h5>
+                    <small class="text-muted">ENCRYPTIONS</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-glow text-center">
+                <div class="card-body">
+                    <i class="fas fa-unlock fa-2x mb-2" style="color: var(--secondary-neon);"></i>
+                    <h5 class="text-glow">{{ history|selectattr("operation_type", "equalto", "Decryption")|list|length }}</h5>
+                    <small class="text-muted">DECRYPTIONS</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-glow text-center">
+                <div class="card-body">
+                    <i class="fas fa-shield-check fa-2x mb-2" style="color: var(--warning-neon);"></i>
+                    <h5 class="text-glow">100%</h5>
+                    <small class="text-muted">SUCCESS RATE</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operations Log -->
+    <div class="card border-glow">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-terminal me-2"></i>COMPLETE OPERATIONS LOG
+                <span class="float-end">
+                    <i class="fas fa-signal" style="color: var(--accent-neon);"></i>
+                    <small>LIVE MONITORING</small>
+                </span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if history %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-2"></i>ID</th>
+                                <th><i class="fas fa-file-code me-2"></i>FILENAME</th>
+                                <th><i class="fas fa-cogs me-2"></i>OPERATION</th>
+                                <th><i class="fas fa-key me-2"></i>KEY ID</th>
+                                <th><i class="fas fa-clock me-2"></i>TIMESTAMP</th>
+                                <th><i class="fas fa-chart-bar me-2"></i>STATUS</th>
+                                <th><i class="fas fa-trash me-2"></i>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in history %}
+                            <tr class="interactive-hover">
+                                <td>
+                                    <span class="badge bg-secondary">#{{ entry.id }}</span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-file-alt me-2" style="color: var(--primary-neon);"></i>
+                                    <span class="text-glow">{{ entry.filename }}</span>
+                                </td>
+                                <td>
+                                    {% if entry.operation_type == 'Encryption' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-lock me-1"></i>{{ entry.operation_type }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-unlock me-1"></i>{{ entry.operation_type }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code class="text-glow">{{ entry.key_id }}</code>
+                                </td>
+                                <td>
+                                    <i class="fas fa-calendar-alt me-2" style="color: var(--secondary-neon);"></i>
+                                    {{ entry.timestamp }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>SUCCESS
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('delete_history_record', record_id=entry.id) }}" style="display: inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete this record?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Record">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('encryption_tool') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-2"></i>NEW OPERATION
+                    </a>
+                    <button class="btn btn-outline-dark me-2" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>EXPORT LOG
+                    </button>
+                    <form method="POST" action="{{ url_for('clear_all_history') }}" style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete ALL history records? This action cannot be undone!')">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-trash-alt me-2"></i>CLEAR ALL
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-database fa-4x mb-3" style="color: var(--text-secondary); opacity: 0.3;"></i>
+                    <h4 class="text-secondary mb-3">NO OPERATIONS RECORDED</h4>
+                    <p class="text-muted mb-4">The security log is empty. Start encrypting files to populate the operation history.</p>
+                    <a href="{{ url_for('encryption_tool') }}" class="btn btn-primary pulse">
+                        <i class="fas fa-rocket me-2"></i>INITIATE FIRST OPERATION
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

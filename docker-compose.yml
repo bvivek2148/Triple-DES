@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persist uploads, keys, and database between container restarts
+      - uploads_data:/app/uploads
+      - keys_data:/app/secure_keys
+      - db_data:/app/database
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  keys_data:
+  db_data:

@@ -1,0 +1,1 @@
+cipher.encrypt_file("sensitive_data.txt", "encrypted_data.bin")
