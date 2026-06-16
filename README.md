@@ -16,6 +16,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/License-Educational-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](README.md)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-triple--des.up.railway.app-success)](https://triple-des.up.railway.app)
 
 </div>
 
@@ -54,6 +55,10 @@ A **world-class command-line interface** and **web application** for secure file
 - **💾 Secure File Handling**: Automatic cleanup and path management
 
 ## 🚀 Quick Start
+
+### 🌐 Live Demo
+You can try out the web application immediately without installing anything:
+**[https://triple-des.up.railway.app](https://triple-des.up.railway.app)**
 
 ### 📦 Installation
 
