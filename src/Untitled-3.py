@@ -1,1 +1,0 @@
-cipher.decrypt_file("encrypted_data.bin", "decrypted_data.txt")
